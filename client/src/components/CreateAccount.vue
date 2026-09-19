@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from "vue";
+import axios from 'axios';
 
 const form = ref(null);
 const email = ref("");
 const userName = ref("");
 const password = ref("");
 const loginMessage = ref("");
+const responseCode = ref("");
 
 const userNameRules = [
   (value) => !!value || "UserName is required.",
@@ -28,6 +30,28 @@ const handleLogin = async () => {
   if (valid) {
     loginMessage.value = "Login form is valid. Backend connection will be added next.";
     // Make an API call - To be added in future
+    
+    const api = axios.create({
+        baseURL: 'http://localhost:3001/api',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+
+    try{
+        const response = await api.post('/account/create', {
+            "email": email.value,
+            "password": password.value
+        })
+
+        console.log("response: ", response);
+
+        responseCode.value = response.status;
+    } catch (error) {
+        console.log("failed to create account", error);
+        responseCode.value = 500;
+    }
+
   } else {
     loginMessage.value = "";
   }
@@ -37,13 +61,13 @@ const handleLogin = async () => {
 <template>
   <v-app>
     <v-form ref="form" @submit.prevent="handleLogin">
-     <v-text-field
+     <!-- <v-text-field
         v-model="userName"
         :rules="userNameRules"
         label="User Name"
         type="text"
         variant="outlined"
-      />
+      /> -->
 
       <v-text-field
         v-model="email"
@@ -62,6 +86,49 @@ const handleLogin = async () => {
       />
       <v-btn block color="primary" size="large" type="submit"> Create Account </v-btn>
     </v-form>
+
+    <v-alert
+        v-if="responseCode === 200"
+        color="success"
+        icon="$success"
+        title="Welcome"
+        text="Successfully Created Your Account!!!"
+        variant="outlined"
+        rounded="true">
+    </v-alert>
+
+    <v-alert
+        v-if="responseCode === 500"
+        color="error"
+        icon="$error"
+        title="Error"
+        text="Failed to create your account"
+        variant="outlined"
+        rounded="true">
+    </v-alert>
+
+
+    
+
+    <!-- <v-snackbar
+    v-model="showSuccess"
+    v-if="responseCode === 200"
+    color="success"
+    location="top right"
+    :timeout="3000"
+    >
+    Account created successfully!
+
+    <template #actions>
+        <v-btn
+        variant="text"
+        @click="showSuccess = false"
+        >
+        Close
+        </v-btn>
+    </template>
+    </v-snackbar> -->
+
   </v-app>
 </template>
 
