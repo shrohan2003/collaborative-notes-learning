@@ -1,11 +1,12 @@
 <script setup>
 import { ref } from 'vue'
-
+import axios from 'axios'
 const form = ref(null)
 const email = ref('')
 const password = ref('')
 const loginMessage = ref('')
-
+const emit = defineEmits(['go-create', 'logged-in'])
+const isError = ref(false)//
 const emailRules = [
   (value) => !!value || 'Email is required.',
   (value) =>
@@ -18,15 +19,27 @@ const passwordRules = [
   (value) =>
     value.length >= 6 || 'Password must be at least 6 characters.',
 ]
-
+// login 
 const handleLogin = async () => {
-  const { valid } = await form.value.validate()
+  const check = await form.value.validate()
 
-  if (valid) {
-    loginMessage.value =
-      'Login form is valid. Backend connection will be added next.'
-  } else {
+  if (!check.valid) {
     loginMessage.value = ''
+    return
+  }
+
+  try {
+    await axios.post('http://localhost:3001/api/account/login', {
+      email: email.value,
+      password: password.value,
+    })
+
+    isError.value = false
+    loginMessage.value = 'Login successful.'
+    emit('logged-in', email.value)// child>> parent msg pathanor vue er msg
+  } catch {
+    isError.value = true
+    loginMessage.value = 'Email or password is incorrect.'
   }
 }
 </script>
@@ -50,7 +63,7 @@ const handleLogin = async () => {
                 <v-alert
                   v-if="loginMessage"
                   class="mb-4"
-                  type="success"
+                  :type="isError ? 'error' : 'success'"
                   variant="tonal"
                 >
                   {{ loginMessage }}
@@ -81,7 +94,7 @@ const handleLogin = async () => {
 
               <v-card-actions class="justify-center">
                 <span>New here?</span>
-                <v-btn color="primary" variant="text">
+              <v-btn color="primary" variant="text" @click="emit('go-create')"> 
                   Create account
                 </v-btn>
               </v-card-actions>
