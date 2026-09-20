@@ -1,12 +1,16 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const form = ref(null)
 const email = ref('')
 const password = ref('')
 const loginMessage = ref('')
-const emit = defineEmits(['go-create', 'logged-in'])
-const isError = ref(false)//
+const isError = ref(false)
+
 const emailRules = [
   (value) => !!value || 'Email is required.',
   (value) =>
@@ -19,7 +23,7 @@ const passwordRules = [
   (value) =>
     value.length >= 6 || 'Password must be at least 6 characters.',
 ]
-// login 
+
 const handleLogin = async () => {
   const check = await form.value.validate()
 
@@ -34,9 +38,8 @@ const handleLogin = async () => {
       password: password.value,
     })
 
-    isError.value = false
-    loginMessage.value = 'Login successful.'
-    emit('logged-in', email.value)// child>> parent msg pathanor vue er msg
+    localStorage.setItem('userEmail', email.value)
+    router.push('/welcome')
   } catch {
     isError.value = true
     loginMessage.value = 'Email or password is incorrect.'
@@ -70,7 +73,6 @@ const handleLogin = async () => {
                 </v-alert>
 
                 <v-form ref="form" @submit.prevent="handleLogin">
-
                   <v-text-field
                     v-model="email"
                     :rules="emailRules"
@@ -78,7 +80,7 @@ const handleLogin = async () => {
                     type="email"
                     variant="outlined"
                   />
-                  
+
                   <v-text-field
                     v-model="password"
                     :rules="passwordRules"
@@ -86,6 +88,7 @@ const handleLogin = async () => {
                     type="password"
                     variant="outlined"
                   />
+
                   <v-btn block color="primary" size="large" type="submit">
                     Log in
                   </v-btn>
@@ -94,7 +97,12 @@ const handleLogin = async () => {
 
               <v-card-actions class="justify-center">
                 <span>New here?</span>
-              <v-btn color="primary" variant="text" @click="emit('go-create')"> 
+
+                <v-btn
+                  color="primary"
+                  variant="text"
+                  @click="router.push('/create-account')"
+                >
                   Create account
                 </v-btn>
               </v-card-actions>
